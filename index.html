@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mystery Shopping Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+
+    <div class="header">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Mystery Shopping Manager <span class="subtitle">CFI · EUMETRA</span></h1>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" onclick="switchTab('estrazioni', this)">Estrazioni</button>
+      <button class="tab" onclick="switchTab('estr-verifica', this)">Estrazioni verifica</button>
+      <button class="tab" onclick="switchTab('assegnazioni', this)">Assegnazioni settimanali</button>
+      <button class="tab" onclick="switchTab('ass-verifica', this)">Assegnazioni verifica</button>
+    </div>
+
+    <!-- ══════════ TAB 1: ESTRAZIONI ══════════ -->
+    <div class="panel active" id="panel-estrazioni">
+
+      <div class="card">
+        <div class="section-title">Configurazione estrazione</div>
+        <div class="row">
+          <div class="field">
+            <label>Cliente</label>
+            <select id="est-cliente" onchange="updateEstrazioneUI()">
+              <option value="">— seleziona —</option>
+              <option value="CFI">CFI</option>
+              <option value="EUMETRA">EUMETRA</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Campagna</label>
+            <input type="text" id="est-campagna" placeholder="es. CFI_APRILE_VISITA01">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Anno</label>
+            <input type="text" id="est-anno" value="2026">
+          </div>
+          <div class="field">
+            <label>Mese</label>
+            <input type="text" id="est-mese" placeholder="es. 04">
+          </div>
+        </div>
+        <div class="row" id="est-visita-row" style="display:none">
+          <div class="field">
+            <label>Numero visita</label>
+            <input type="number" id="est-visita" min="1" max="9" value="1">
+          </div>
+          <div class="field">
+            <label>Periodo address</label>
+            <input type="text" id="est-periodo" placeholder="es. dal 27/03 al 06/04">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">File di input</div>
+        <div class="uploads-grid">
+          <div class="upload-item">
+            <label>Basket prodotti *</label>
+            <div class="upload-zone" id="uz-basket" onclick="triggerUpload('file-basket')">
+              <input type="file" id="file-basket" accept=".xlsx" onchange="fileChosen(this,'uz-basket')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/>
+              </svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+          <div class="upload-item">
+            <label>Elenco prodotti PRG *</label>
+            <div class="upload-zone" id="uz-prg" onclick="triggerUpload('file-prg')">
+              <input type="file" id="file-prg" accept=".xlsx" onchange="fileChosen(this,'uz-prg')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/>
+              </svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+          <div class="upload-item">
+            <label>Template assegnazioni *</label>
+            <div class="upload-zone" id="uz-template" onclick="triggerUpload('file-template')">
+              <input type="file" id="file-template" accept=".xlsx" onchange="fileChosen(this,'uz-template')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/>
+              </svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+          <div class="upload-item">
+            <label>Export prezzi precedenti</label>
+            <div class="upload-zone optional" id="uz-export-prec" onclick="triggerUpload('file-export-prec')">
+              <input type="file" id="file-export-prec" accept=".xlsx" onchange="fileChosen(this,'uz-export-prec')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/>
+              </svg>
+              <div class="uz-label">Opzionale</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Shopper per PDV</div>
+        <div class="table-wrapper">
+          <table class="shopper-table">
+            <thead>
+              <tr><th>PV code</th><th>Zona</th><th>PV nome</th><th>Shopper</th><th></th></tr>
+            </thead>
+            <tbody id="shopper-body-est"></tbody>
+          </table>
+        </div>
+        <button class="add-row-btn" onclick="addShopperRow('shopper-body-est')">+ aggiungi PDV</button>
+      </div>
+
+      <button class="btn-primary" onclick="runEstrazioni()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+        Genera file assegnazioni
+      </button>
+      <div class="status-bar" id="status-est"></div>
+    </div>
+
+    <!-- ══════════ TAB 2: ESTRAZIONI VERIFICA ══════════ -->
+    <div class="panel" id="panel-estr-verifica">
+
+      <div class="card">
+        <div class="section-title">Configurazione verifica</div>
+        <div class="row">
+          <div class="field">
+            <label>Cliente</label>
+            <select id="ver-cliente">
+              <option value="">— seleziona —</option>
+              <option value="CFI">CFI</option>
+              <option value="EUMETRA">EUMETRA</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Campagna</label>
+            <input type="text" id="ver-campagna" placeholder="es. CFI_MAR_2026_Verifica">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Anno</label>
+            <input type="text" id="ver-anno" value="2026">
+          </div>
+          <div class="field">
+            <label>Mese</label>
+            <input type="text" id="ver-mese" placeholder="es. 03">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>PRG verifica (fisso)</label>
+            <input type="text" id="ver-prg" value="10">
+          </div>
+          <div class="field">
+            <label>Testo address</label>
+            <input type="text" id="ver-periodo" placeholder="es. Verifiche Marzo 26">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">File di input</div>
+        <div class="uploads-grid">
+          <div class="upload-item">
+            <label>File verifiche con prezzi *</label>
+            <div class="upload-zone" id="uz-ver-verifiche" onclick="triggerUpload('file-ver-verifiche')">
+              <input type="file" id="file-ver-verifiche" accept=".xlsx" onchange="fileChosen(this,'uz-ver-verifiche')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/></svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+          <div class="upload-item">
+            <label>Elenco prodotti PRG *</label>
+            <div class="upload-zone" id="uz-ver-prg" onclick="triggerUpload('file-ver-prg')">
+              <input type="file" id="file-ver-prg" accept=".xlsx" onchange="fileChosen(this,'uz-ver-prg')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/></svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+          <div class="upload-item">
+            <label>Template assegnazioni *</label>
+            <div class="upload-zone" id="uz-ver-template" onclick="triggerUpload('file-ver-template')">
+              <input type="file" id="file-ver-template" accept=".xlsx" onchange="fileChosen(this,'uz-ver-template')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/></svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Shopper per PDV</div>
+        <div class="table-wrapper">
+          <table class="shopper-table">
+            <thead>
+              <tr><th>PV code</th><th>Zona</th><th>PV nome</th><th>Shopper</th><th></th></tr>
+            </thead>
+            <tbody id="shopper-body-ver"></tbody>
+          </table>
+        </div>
+        <button class="add-row-btn" onclick="addShopperRow('shopper-body-ver')">+ aggiungi PDV</button>
+      </div>
+
+      <button class="btn-primary" onclick="runVerifica()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+        Genera assegnazioni verifica
+      </button>
+      <div class="status-bar" id="status-ver"></div>
+    </div>
+
+    <!-- ══════════ TAB 3: ASSEGNAZIONI SETTIMANALI ══════════ -->
+    <div class="panel" id="panel-assegnazioni">
+
+      <div class="card">
+        <div class="section-title">Dati campagna</div>
+        <div class="row">
+          <div class="field">
+            <label>Cliente</label>
+            <select id="ass-cliente">
+              <option value="">— seleziona —</option>
+              <option value="CFI">CFI</option>
+              <option value="EUMETRA">EUMETRA</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Campagna</label>
+            <input type="text" id="ass-campagna" placeholder="es. CFI_APRILE_VISITA01">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">File di input</div>
+        <div class="uploads-grid">
+          <div class="upload-item">
+            <label>Export Shopmetrics *</label>
+            <div class="upload-zone" id="uz-ass-export" onclick="triggerUpload('file-ass-export')">
+              <input type="file" id="file-ass-export" accept=".xlsx" onchange="fileChosen(this,'uz-ass-export')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/></svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+          <div class="upload-item">
+            <label>File verifiche da compilare *</label>
+            <div class="upload-zone" id="uz-ass-verifiche" onclick="triggerUpload('file-ass-verifiche')">
+              <input type="file" id="file-ass-verifiche" accept=".xlsx" onchange="fileChosen(this,'uz-ass-verifiche')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/></svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rules-card">
+        <div class="section-title">Regole di codifica</div>
+        <div class="rules-grid">
+          <div class="rule-block">
+            <div class="rule-label">PRESENZA</div>
+            <div class="rule-items">
+              <span class="rule-tag present">vuoto = presente</span>
+              <span class="rule-tag promo">1 = in promozione</span>
+              <span class="rule-tag absent">0 = assente</span>
+              <span class="rule-tag other">2 = altro formato</span>
+            </div>
+          </div>
+          <div class="rule-block">
+            <div class="rule-label">MOTIVO ASSENZA</div>
+            <div class="rule-items">
+              <span class="rule-tag">1 = non in assortimento</span>
+              <span class="rule-tag">2 = non presente a scaffale</span>
+              <span class="rule-tag">3 = descrizione non chiara</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="runAssegnazioni()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+        Compila verifiche con dati rilevati
+      </button>
+      <div class="status-bar" id="status-ass"></div>
+    </div>
+
+    <!-- ══════════ TAB 4: ASSEGNAZIONI VERIFICA ══════════ -->
+    <div class="panel" id="panel-ass-verifica">
+
+      <div class="card">
+        <div class="section-title">Dati campagna</div>
+        <div class="row">
+          <div class="field">
+            <label>Cliente</label>
+            <select id="assv-cliente">
+              <option value="">— seleziona —</option>
+              <option value="CFI">CFI</option>
+              <option value="EUMETRA">EUMETRA</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Campagna</label>
+            <input type="text" id="assv-campagna" placeholder="es. CFI_MAR_2026_Verifica">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">File di input</div>
+        <div class="uploads-grid">
+          <div class="upload-item">
+            <label>Export verifica Shopmetrics *</label>
+            <div class="upload-zone" id="uz-assv-export" onclick="triggerUpload('file-assv-export')">
+              <input type="file" id="file-assv-export" accept=".xlsx" onchange="fileChosen(this,'uz-assv-export')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/></svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+          <div class="upload-item">
+            <label>File verifiche da compilare *</label>
+            <div class="upload-zone" id="uz-assv-verifiche" onclick="triggerUpload('file-assv-verifiche')">
+              <input type="file" id="file-assv-verifiche" accept=".xlsx" onchange="fileChosen(this,'uz-assv-verifiche')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/></svg>
+              <div class="uz-label">Carica file</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+          <div class="upload-item">
+            <label>Export precedente (prezzi)</label>
+            <div class="upload-zone optional" id="uz-assv-prec" onclick="triggerUpload('file-assv-prec')">
+              <input type="file" id="file-assv-prec" accept=".xlsx" onchange="fileChosen(this,'uz-assv-prec')">
+              <svg class="uz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4-4 4 4M12 8v8"/></svg>
+              <div class="uz-label">Opzionale</div>
+              <div class="uz-name"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="runAssVerifica()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+        Compila verifiche
+      </button>
+      <div class="status-bar" id="status-assv"></div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
